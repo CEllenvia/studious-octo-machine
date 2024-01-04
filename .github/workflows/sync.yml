@@ -1,0 +1,48 @@
+name: Sync to upstream "cellenviadata" for deploying to Cloudflare pages
+
+on: 
+  watch:
+    types: [started]
+   
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id 
+    steps:
+      - name: Clone repo deployed onto cdn
+        uses: GuillaumeFalourd/clone-github-repo-action@v2.1
+        with:
+          depth: 1
+          owner: 'CEllenvia'
+          repository: 'studious-octo-machine'
+      - name: list files to be deployed
+        run: |
+          cd studious-octo-machine
+      - name: move everything to the safe place, remove original readme file
+        run: |
+          cd /home/runner/work
+          mkdir origin
+          cp -r studious-octo-machine/studious-octo-machine/* /home/runner/work/origin
+      - name: Check out repo to deploy
+        uses: actions/checkout@v3
+        with:
+          repository: 'CEllenvia/cellenviadata'
+          token: ${{ secrets.REMOTE_GIT_HTTPS_KEY }}
+      - name: List files in the remote
+        run: |
+          ls ${{ github.workspace }}
+      - name: add everything in the remote
+        run: |
+          cp -r /home/runner/work/origin/studious-octo-machine/* ${{ github.workspace }}
+          cd ${{ github.workspace }}
+      - name: init bot username and email
+        run: |
+          git config --global user.name "MOShotumobu"
+          git config --global user.email cellenvia@outlook.com
+      - name: "deploy back"
+        run: |
+          cd ${{ github.workspace }}
+          git add .
+          git commit -m "Deploy by studious-octo-machine actions"
+          git push 
+
